@@ -1,8 +1,9 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Highway Runner - Mobile</title>
+<title>3D Highway Runner</title>
 <style>
   body { margin:0; overflow:hidden; background:#222; font-family:sans-serif; }
   #score { position:fixed; top:20px; left:20px; color:white; font-size:24px; z-index:10; }
@@ -11,9 +12,13 @@
   #rightBtn { right:30px; }
 </style>
 </head>
-<body><div id="score">Score: 0</div>
+<body>
+
+<div id="score">Score: 0</div>
 <button id="leftBtn">⬅️</button>
-<button id="rightBtn">➡️</button><script type="module">
+<button id="rightBtn">➡️</button>
+
+<script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
@@ -57,7 +62,7 @@ for(let i=1;i<3;i++){
 const loader = new GLTFLoader();
 let car, obstacles=[], coins=[];
 
-// Updated URLs for GitHub Pages
+// GitHub Pages URLs
 const CAR_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/cartoon_car.glb';
 const OBSTACLE_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/spikeball_obstacles.glb';
 const COIN_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/coins.glb';
@@ -77,6 +82,8 @@ loader.load(CAR_URL, gltf=>{
     car.position.set(0,0.5,0);
     scene.add(car);
     scene.remove(placeholder);
+}, undefined, ()=>{
+    console.warn("Car GLB failed to load, placeholder visible.");
 });
 
 // Touch controls
@@ -98,6 +105,8 @@ function loadObstacle(){
         obs.position.set(randomLane(),0.5,-50);
         scene.add(obs);
         obstacles.push(obs);
+    }, undefined, ()=>{
+        console.warn("Obstacle GLB failed to load.");
     });
 }
 
@@ -109,6 +118,8 @@ function loadCoin(){
         coin.position.set(randomLane(),0.5,-50);
         scene.add(coin);
         coins.push(coin);
+    }, undefined, ()=>{
+        console.warn("Coin GLB failed to load.");
     });
 }
 
@@ -161,5 +172,7 @@ function animate(){
     renderer.render(scene,camera);
 }
 animate();
-</script></body>
+</script>
+
+</body>
 </html>
