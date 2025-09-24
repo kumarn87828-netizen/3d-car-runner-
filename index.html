@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,13 +11,9 @@
   #rightBtn { right:30px; }
 </style>
 </head>
-<body>
-
-<div id="score">Score: 0</div>
+<body><div id="score">Score: 0</div>
 <button id="leftBtn">⬅️</button>
-<button id="rightBtn">➡️</button>
-
-<script type="module">
+<button id="rightBtn">➡️</button><script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
@@ -62,10 +57,10 @@ for(let i=1;i<3;i++){
 const loader = new GLTFLoader();
 let car, obstacles=[], coins=[];
 
-// Replace these with your GitHub Pages URLs
-const CAR_URL = 'YOUR_CAR_GITHUB_URL.glb';
-const OBSTACLE_URL = 'YOUR_OBSTACLE_GITHUB_URL.glb';
-const COIN_URL = 'YOUR_COIN_GITHUB_URL.glb';
+// Updated URLs for GitHub Pages
+const CAR_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/cartoon_car.glb';
+const OBSTACLE_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/spikeball_obstacles.glb';
+const COIN_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/coins.glb';
 
 // Placeholder cube while car loads
 const placeholder = new THREE.Mesh(
@@ -166,7 +161,5 @@ function animate(){
     renderer.render(scene,camera);
 }
 animate();
-</script>
-
-</body>
+</script></body>
 </html>
