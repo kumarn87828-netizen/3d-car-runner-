@@ -22,154 +22,150 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
-// Scene setup
+// Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x222222);
+scene.background = new THREE.Color(0x444444);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 camera.position.set(0,3,7);
 camera.lookAt(0,0,0);
+
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // Lights
-scene.add(new THREE.AmbientLight(0xffffff, 1));
-const directional = new THREE.DirectionalLight(0xffffff, 1);
-directional.position.set(10,10,10);
-scene.add(directional);
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const dir = new THREE.DirectionalLight(0xffffff, 1);
+dir.position.set(5,10,5);
+scene.add(dir);
 
 // Road
-const roadGeo = new THREE.PlaneGeometry(6, 1000);
-const roadMat = new THREE.MeshStandardMaterial({color:0x333333});
-const road = new THREE.Mesh(roadGeo, roadMat);
+const road = new THREE.Mesh(
+  new THREE.PlaneGeometry(6,1000),
+  new THREE.MeshStandardMaterial({color:0x333333})
+);
 road.rotation.x = -Math.PI/2;
 road.position.z = -500;
 scene.add(road);
 
 // Lane lines
 for(let i=1;i<3;i++){
-  const lineGeo = new THREE.PlaneGeometry(0.1, 1000);
-  const lineMat = new THREE.MeshStandardMaterial({color:0xffffff});
-  const line = new THREE.Mesh(lineGeo,lineMat);
+  const line = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.1,1000),
+    new THREE.MeshStandardMaterial({color:0xffffff})
+  );
   line.rotation.x = -Math.PI/2;
   line.position.x = -2 + i*2;
-  line.position.y = 0.01;
   line.position.z = -500;
+  line.position.y = 0.01;
   scene.add(line);
 }
 
 // Loader
 const loader = new GLTFLoader();
-let car, obstacles=[], coins=[];
 
-// GitHub Pages URLs
+// Placeholder boxes (always visible)
+let car = new THREE.Mesh(new THREE.BoxGeometry(1,1,2), new THREE.MeshStandardMaterial({color:0xff0000}));
+car.position.set(0,0.5,0);
+scene.add(car);
+
+let obstacles = [];
+let coins = [];
+
+// URLs
 const CAR_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/cartoon_car.glb';
 const OBSTACLE_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/spikeball_obstacles.glb';
 const COIN_URL = 'https://kumarn87828-netizen.github.io/3d-car-runner-/coins.glb';
 
-// Placeholder cube while car loads
-const placeholder = new THREE.Mesh(
-  new THREE.BoxGeometry(1,1,2),
-  new THREE.MeshStandardMaterial({color:0xff0000})
-);
-placeholder.position.set(0,0.5,0);
-scene.add(placeholder);
-
-// Load player car
+// Load actual GLBs (replace placeholder when loaded)
 loader.load(CAR_URL, gltf=>{
-    car = gltf.scene;
-    car.scale.set(0.01,0.01,0.01);
-    car.position.set(0,0.5,0);
-    scene.add(car);
-    scene.remove(placeholder);
-}, undefined, ()=>{
-    console.warn("Car GLB failed to load, placeholder visible.");
-});
+  gltf.scene.scale.set(0.01,0.01,0.01);
+  gltf.scene.position.copy(car.position);
+  scene.remove(car);
+  car = gltf.scene;
+  scene.add(car);
+}, undefined, ()=>console.warn("Car GLB failed to load"));
 
-// Touch controls
-let leftPressed=false, rightPressed=false;
-document.getElementById('leftBtn').addEventListener('touchstart', e=>{ leftPressed=true; e.preventDefault(); });
-document.getElementById('leftBtn').addEventListener('touchend', e=>{ leftPressed=false; e.preventDefault(); });
-document.getElementById('rightBtn').addEventListener('touchstart', e=>{ rightPressed=true; e.preventDefault(); });
-document.getElementById('rightBtn').addEventListener('touchend', e=>{ rightPressed=false; e.preventDefault(); });
+function spawnObstacle(){
+  const obsPlaceholder = new THREE.Mesh(new THREE.BoxGeometry(1,1,2), new THREE.MeshStandardMaterial({color:0x00ff00}));
+  obsPlaceholder.position.set([-2,0,2][Math.floor(Math.random()*3)],0.5,-50);
+  scene.add(obsPlaceholder);
+  obstacles.push(obsPlaceholder);
 
-// Lanes
-const lanes = [-2,0,2];
-function randomLane(){ return lanes[Math.floor(Math.random()*lanes.length)]; }
-
-// Load obstacles
-function loadObstacle(){ 
-    loader.load(OBSTACLE_URL, gltf=>{
-        const obs = gltf.scene;
-        obs.scale.set(0.01,0.01,0.01);
-        obs.position.set(randomLane(),0.5,-50);
-        scene.add(obs);
-        obstacles.push(obs);
-    }, undefined, ()=>{
-        console.warn("Obstacle GLB failed to load.");
-    });
+  loader.load(OBSTACLE_URL, gltf=>{
+    gltf.scene.scale.set(0.01,0.01,0.01);
+    gltf.scene.position.copy(obsPlaceholder.position);
+    scene.remove(obsPlaceholder);
+    scene.add(gltf.scene);
+    obstacles[obstacles.indexOf(obsPlaceholder)] = gltf.scene;
+  }, undefined, ()=>console.warn("Obstacle GLB failed"));
 }
 
-// Load coins
-function loadCoin(){
-    loader.load(COIN_URL, gltf=>{
-        const coin = gltf.scene;
-        coin.scale.set(0.01,0.01,0.01);
-        coin.position.set(randomLane(),0.5,-50);
-        scene.add(coin);
-        coins.push(coin);
-    }, undefined, ()=>{
-        console.warn("Coin GLB failed to load.");
-    });
+function spawnCoin(){
+  const coinPlaceholder = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), new THREE.MeshStandardMaterial({color:0xffff00}));
+  coinPlaceholder.position.set([-2,0,2][Math.floor(Math.random()*3)],0.5,-50);
+  scene.add(coinPlaceholder);
+  coins.push(coinPlaceholder);
+
+  loader.load(COIN_URL, gltf=>{
+    gltf.scene.scale.set(0.01,0.01,0.01);
+    gltf.scene.position.copy(coinPlaceholder.position);
+    scene.remove(coinPlaceholder);
+    scene.add(gltf.scene);
+    coins[coins.indexOf(coinPlaceholder)] = gltf.scene;
+  }, undefined, ()=>console.warn("Coin GLB failed"));
 }
+
+// Controls
+let left=false, right=false;
+document.getElementById('leftBtn').addEventListener('touchstart',()=>left=true);
+document.getElementById('leftBtn').addEventListener('touchend',()=>left=false);
+document.getElementById('rightBtn').addEventListener('touchstart',()=>right=true);
+document.getElementById('rightBtn').addEventListener('touchend',()=>right=false);
 
 // Game variables
-let score=0, gameOver=false;
+const lanes = [-2,0,2];
+let score=0;
 const scoreEl = document.getElementById('score');
-const clock = new THREE.Clock();
+let clock = new THREE.Clock();
 let obstacleTimer=0, coinTimer=0;
 
 // Animate
 function animate(){
-    requestAnimationFrame(animate);
-    if(gameOver) { renderer.render(scene,camera); return; }
-    const delta = clock.getDelta();
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
 
-    // Car movement
-    if(car){
-      if(leftPressed) car.position.x = Math.max(lanes[0], car.position.x-0.2);
-      if(rightPressed) car.position.x = Math.min(lanes[2], car.position.x+0.2);
-    }
+  // Car move
+  if(left) car.position.x = Math.max(lanes[0], car.position.x-0.2);
+  if(right) car.position.x = Math.min(lanes[2], car.position.x+0.2);
 
-    // Spawn obstacles
-    obstacleTimer += delta;
-    if(obstacleTimer > 1){ loadObstacle(); obstacleTimer=0; }
+  // Spawn obstacles and coins
+  obstacleTimer += delta;
+  if(obstacleTimer>1){ spawnObstacle(); obstacleTimer=0; }
 
-    // Spawn coins
-    coinTimer += delta;
-    if(coinTimer > 1.5){ loadCoin(); coinTimer=0; }
+  coinTimer += delta;
+  if(coinTimer>1.5){ spawnCoin(); coinTimer=0; }
 
-    // Move obstacles
-    obstacles.forEach((obs,i)=>{
-        obs.position.z += 0.5;
-        if(obs.position.z > camera.position.z+5){ scene.remove(obs); obstacles.splice(i,1); }
-        if(car && car.position.distanceTo(obs.position)<1.5){ gameOver=true; alert("Game Over! Score: "+Math.floor(score)); }
-    });
+  // Move obstacles
+  obstacles.forEach((obs,i)=>{
+    obs.position.z += 0.5;
+    if(obs.position.z > camera.position.z+5){ scene.remove(obs); obstacles.splice(i,1); }
+    if(car.position.distanceTo(obs.position)<1.5){ alert("Game Over! Score:"+Math.floor(score)); location.reload(); }
+  });
 
-    // Move coins
-    coins.forEach((coin,i)=>{
-        coin.position.z += 0.5;
-        coin.rotation.x += delta*5;
-        coin.rotation.y += delta*5;
-        if(coin.position.z > camera.position.z+5){ scene.remove(coin); coins.splice(i,1); }
-        if(car && car.position.distanceTo(coin.position)<1.5){ score+=10; scoreEl.textContent='Score: '+Math.floor(score); scene.remove(coin); coins.splice(i,1); }
-    });
+  // Move coins
+  coins.forEach((coin,i)=>{
+    coin.position.z +=0.5;
+    coin.rotation.x += delta*5;
+    coin.rotation.y += delta*5;
+    if(coin.position.z > camera.position.z+5){ scene.remove(coin); coins.splice(i,1); }
+    if(car.position.distanceTo(coin.position)<1.5){ score+=10; scoreEl.textContent='Score:'+Math.floor(score); scene.remove(coin); coins.splice(i,1); }
+  });
 
-    // Score
-    score += 0.1;
-    scoreEl.textContent='Score: '+Math.floor(score);
+  score +=0.1;
+  scoreEl.textContent='Score:'+Math.floor(score);
 
-    renderer.render(scene,camera);
+  renderer.render(scene,camera);
 }
 animate();
 </script>
